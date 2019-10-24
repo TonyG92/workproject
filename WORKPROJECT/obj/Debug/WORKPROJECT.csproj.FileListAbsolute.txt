@@ -1,0 +1,6 @@
+C:\Users\aangotti\source\repos\WORKPROJECT\WORKPROJECT\bin\Debug\WORKPROJECT.exe.config
+C:\Users\aangotti\source\repos\WORKPROJECT\WORKPROJECT\bin\Debug\WORKPROJECT.exe
+C:\Users\aangotti\source\repos\WORKPROJECT\WORKPROJECT\bin\Debug\WORKPROJECT.pdb
+C:\Users\aangotti\source\repos\WORKPROJECT\WORKPROJECT\obj\Debug\WORKPROJECT.csprojAssemblyReference.cache
+C:\Users\aangotti\source\repos\WORKPROJECT\WORKPROJECT\obj\Debug\WORKPROJECT.exe
+C:\Users\aangotti\source\repos\WORKPROJECT\WORKPROJECT\obj\Debug\WORKPROJECT.pdb
