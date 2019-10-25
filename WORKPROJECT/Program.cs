@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace WORKPROJECT
 {
@@ -13,55 +11,87 @@ namespace WORKPROJECT
         {
             Console.WriteLine("Please enter a start word");
             string startword = Console.ReadLine();
-            //Console.WriteLine("Please enter an end word");
-            //string endword = Console.ReadLine();
+            Console.WriteLine("Please enter an end word");
+            string endword = Console.ReadLine();
+            Console.Clear();
 
-            List<string> wordList = File.ReadLines("wordlist.txt").Select(w => w.ToLower()).ToList();
-            wordList = wordList.Where(w => w.Length == startword.Length).ToList();
+            List<string> wordList = File.ReadLines("wordlist.txt").Where(w => w.Length == startword.Length).Select(w => w.ToLower()).ToList();     // select = map, runs the function on every single thing in the list.
+            //wordList = wordList.Where(w => w.Length == startword.Length).ToList(); -- slighty more optimized above.
 
             // search words that have same character length and can vary by 1 character.
             // find the list for the start word then establish the start word as the parent
             // have the children list inherit the parent list and recursively inherit the lists until reaching the final end word.
 
-            //WordRelationalNode node = new WordRelationalNode();
-
-            
             var setWord = startword;
-            var setParent = new WordRelationalNode(setWord, null);
-            //when there is no parent or parent is null you know your on the way to root node.
+            var setParent = new WordRelationalNode(setWord, null);      //when there is no parent or parent is null you know your on the way to root node.
+            AddSingleDiffChildren(setParent, wordList, endword);
 
-            //var children = wordList;
-            //List<WordRelationalNode> children = new List<WordRelationalNode>();
-            var children = RepeatList(setWord, wordList);
 
-            foreach (var word in children)
-            {
-                WordRelationalNode newChild = new WordRelationalNode(word, setParent);
-                setParent.AddChild(newChild);
-                Console.WriteLine(word);
-            }
+            //var children = RepeatList(setParent, wordList, endword);
+
+            //foreach (var word in children)
+            //{
+            //    WordRelationalNode newChild = new WordRelationalNode(word, setParent);
+            //    setParent.AddChild(newChild);
+            //    Console.WriteLine(word);
+            //}
 
             //step 1 make root node
             //step 2 make a method that takes a node and adds all children
             //step 3 for all children added execute step 2
 
-            //public class List<WordRelationalNode> : WordRelationalNode
             //first word = start word is the root node
             // each node has a list of children and it has a string that is the actual word represented by that part
             // 2 steps, for any node that you hand in youu want to find all the childrens for that word that it is representing
             // then from that info includng all the children, the original word, and the node, you want to build a node and put it in the model.
             //infnite loop problem and make sure words arent same twice, validation issues to think about.
+
+            //Breadth First Searching is the last node is written first
+
+            Queue<WordRelationalNode> q = new Queue<WordRelationalNode>(); // put the parent node into a Queue, FIFO
+            q.Enqueue(setParent);
+            WordRelationalNode current = null; //store nothing in current node
+
+            while (q.Count != 0)  // as long as there is stuff in the queue keep doing work
+            {
+                current = q.Dequeue();    /// store the first node in queue in current
+                
+                foreach (WordRelationalNode child in current.Children)    // child is the next node in the list of current children 
+                {
+                    q.Enqueue(child);   // put next node in queue
+                }
+            }
+
+            Stack<WordRelationalNode> s = new Stack<WordRelationalNode>();  // stack = LIFO last in first out
+
+
+            while (current != null)
+            {
+                s.Push(current); // this pushes the current into a stack.
+                //Console.WriteLine(current.Word);
+                current = current.Parent;  /// flips order by pushing into stack
+            }
+
+            while (s.Count != 0)             // as long as there is stuff in the stack keep doing work
+            {
+                Console.WriteLine(s.Pop().Word); // removes top node out and in this case top word out.
+            }
+           
+           
+
+
         }
 
-        public static AddSingleDiffChildren(WordRelationalNode parent)
+        public static void AddSingleDiffChildren(WordRelationalNode parent, List<string> wordList, string endword)
         {
-            var children = RepeatList(parent.Word, parent);
+            var children = RepeatList(parent, wordList, endword);
 
             foreach (var word in children)
             {
-                WordRelationalNode newChild = new WordRelationalNode(word, setParent);
-                setParent.AddChild(newChild);
-                Console.WriteLine(word);
+                WordRelationalNode newChild = new WordRelationalNode(word, parent);
+                parent.AddChild(newChild);
+                AddSingleDiffChildren(newChild, wordList, endword);
+                //Console.WriteLine(word);
             }
         }
 
@@ -84,14 +114,37 @@ namespace WORKPROJECT
                 return false;
             }
         }
-        public static List<string> RepeatList(String startword, List<WordRelationalNode> children)
+        public static List<string> RepeatList(WordRelationalNode currentNode, List<string> wordList, string endword)
         {
-            var wordlist = children.Where(w => w.Length == startword.Length).Where(w2 => StringCharDiff(startword, w2) == true).ToList();
-            Console.Write(string.Join(",", wordlist));
-            Console.ReadKey();
+            int curDistance = Distance(currentNode.Word, endword);
+
+            var wordlist = wordList.Where(w => StringCharDiff(currentNode.Word, w)).Where(w =>
+            {
+                if (currentNode.Parent == null)
+                {
+                    return true;
+                }
+                return w != currentNode.Parent.Word;
+            })
+            .Where(w => Distance(w, endword) < curDistance)
+            .ToList();
+
+            //Console.Write(string.Join(",", wordlist));
 
             return wordlist;
         }
+
+        
+        /// Count and return the number of times w1
+        /// characters do not match w2
+        private static int Distance(string w1, string w2)
+        {
+            return w1.ToCharArray()
+                .Zip(w2.ToCharArray(), (c1, c2) => new { c1, c2 })
+                .Count(m => m.c1 != m.c2);
+        }
+
+
     }
     public class WordRelationalNode
     {
@@ -122,66 +175,5 @@ namespace WORKPROJECT
         {
             Children.Add(addChild);
         }
-
-        public void AddAllChildren(WordRelationalNode addChild, List<WordRelationalNode> Children)
-        {
-            while(addChild != null)
-            {
-                foreach (WordRelationalNode child in Children)
-                {
-                    Children.Add(addChild);
-                }
-                break;
-            }    
-        }
-        //public void AddChild(WordRelationalNode addChild)
-        //{
-        //    foreach (WordRelationalNode child in Children)
-        //    {
-        //        Children.Add(addChild);
-        //        if (child.Word == Word)
-        //        {
-        //            break;
-        //        }
-        //        Console.WriteLine(Word);
-        //    }
-        //}
-
-        //public void AddChild(WordRelationalNode addChild, List<WordRelationalNode> Children)
-        //{
-        //    if (addChild == null)
-        //        return;
-
-        //    Children.Add(addChild);
-        //    Console.WriteLine(addChild);
-
-        //    foreach (var n in addChild.Word)
-        //    {
-        //        AddChild(addChild, Children);
-        //    }
-        //}
-
     }
 }
-
-//public static void GetNodes(Node node)
-//{
-//    if (node == null)
-//    {
-//        return;
-//    }
-//    Console.WriteLine(node.Name);
-//    foreach (var n in node.Nodes)
-//    {
-//        GetNodes(n);
-//    }
-//}
-// * 
-
-
-////while (startword != endword)
-////{
-////if (startword == endword)
-////{
-////    break;
-////}
